@@ -57,20 +57,35 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorText, setErrorText] = useState("");
 
-  const query = "interstellar";
+  //   const query = "interstellar";
+  const query = "jkljjoj0os";
 
   useEffect(function () {
     // async function bcoz we can't use
     async function fetchMovies() {
-      setIsLoading(true); // set loading to true
-      const res = await fetch(
-        `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
-      );
+      try {
+        setIsLoading(true); // set loading to true
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
+        );
 
-      const data = await res.json();
-      setMovies(data.Search);
-      setIsLoading(false); // set loading to false
+        if (!res.ok)
+          throw new Error("Something went wrong with fetching movies");
+
+        const data = await res.json();
+
+        // checking if the response is string 'False' not boolean
+        if (data.Response === "False") throw new Error("Movie not found");
+
+        setMovies(data.Search);
+      } catch (err) {
+        console.error(err.message);
+        setErrorText(err.message);
+      } finally {
+        setIsLoading(false); // set loading to false
+      }
     }
 
     fetchMovies();
@@ -84,8 +99,18 @@ export default function App() {
       </NavBar>
 
       <Main>
-        {/* if loading then loader else movielist */}
-        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
+        <Box>
+          {/* We need to display error but with this code we have to nest another ternary which will be bad code
+           {isLoading ? <Loader /> : <MovieList movies={movies} />} */}
+
+          {isLoading && <Loader />}
+
+          {/* If no data loading & no error then render movielist */}
+          {!isLoading && !errorText && <MovieList movies={movies} />}
+
+          {/* if there is error then render error message */}
+          {errorText && <ErrorMessage message={errorText} />}
+        </Box>
 
         <Box>
           <WatchedSummary watched={watched} />
@@ -98,6 +123,14 @@ export default function App() {
 
 function Loader() {
   return <p className="loader">Loading...</p>;
+}
+
+function ErrorMessage({ message }) {
+  return (
+    <p className="error">
+      <span>⛔</span> {message}
+    </p>
+  );
 }
 
 function NavBar({ children }) {
