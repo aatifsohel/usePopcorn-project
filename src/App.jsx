@@ -369,6 +369,15 @@ function MovieDetails({
     [selectedId]
   );
 
+  // from here we want to change the title as selected movie
+  useEffect(
+    function () {
+      if (!title) return; // to avoid initial temporory 'undefined'
+      document.title = `Movie | ${title}`;
+    },
+    [title]
+  );
+
   return (
     <div className="details">
       {isLoading ? (
