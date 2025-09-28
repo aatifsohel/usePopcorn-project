@@ -60,7 +60,7 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
-  const [selectedId, setSelectedId] = useState();
+  const [selectedId, setSelectedId] = useState(null);
 
   //   const tempQuery = "interstellar";
 
@@ -128,12 +128,11 @@ export default function App() {
           setMovies(data.Search);
           setErrorText("");
         } catch (err) {
-          // Catching error & setting error text
-          console.error(err.message);
-
           // Fetch request cancelled due to abortcontroller
           // This is not an error in our app
           if (err.name !== "AbortError") {
+            // Catching error & setting error text (without abort error)
+            console.error(err.message);
             setErrorText(err.message);
           }
         } finally {
@@ -147,6 +146,8 @@ export default function App() {
         setErrorText("");
         return;
       }
+
+      handleCloseMovie(); // closing movie when searching new movie
       fetchMovies();
 
       // cleanup fn
@@ -363,6 +364,26 @@ function MovieDetails({
     onAddWatchedMovie(newWatchedMovie);
     onCloseMovie();
   }
+
+  // handling keyress events only inside movie details
+  useEffect(
+    function () {
+      // this fn needs to be same on both addEvent & removeEvent (cleanup)
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+
+      // cleanup fn
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
 
   useEffect(
     // we handle errors here same as when fetching movie list
