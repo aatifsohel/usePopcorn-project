@@ -374,6 +374,11 @@ function MovieDetails({
     function () {
       if (!title) return; // to avoid initial temporory 'undefined'
       document.title = `Movie | ${title}`;
+
+      // returning cleanup fn - umounting will clean effects
+      return function () {
+        document.title = "usePopcorn";
+      };
     },
     [title]
   );
