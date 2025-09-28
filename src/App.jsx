@@ -104,13 +104,17 @@ export default function App() {
 
   useEffect(
     function () {
+      // fixing API race condition using browser API
+      const controller = new AbortController();
+
       // async function bcoz we can't use
       async function fetchMovies() {
         try {
           setIsLoading(true); // set loading to true
           setErrorText(""); // always clear all errors before fetching the data
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`,
+            { signal: controller.signal }
           );
 
           if (!res.ok)
@@ -122,10 +126,16 @@ export default function App() {
           if (data.Response === "False") throw new Error("Movie not found");
 
           setMovies(data.Search);
+          setErrorText("");
         } catch (err) {
           // Catching error & setting error text
           console.error(err.message);
-          setErrorText(err.message);
+
+          // Fetch request cancelled due to abortcontroller
+          // This is not an error in our app
+          if (err.name !== "AbortError") {
+            setErrorText(err.message);
+          }
         } finally {
           setIsLoading(false); // set loading to false
         }
@@ -138,6 +148,11 @@ export default function App() {
         return;
       }
       fetchMovies();
+
+      // cleanup fn
+      return function () {
+        controller.abort();
+      };
     },
     [query]
   );
