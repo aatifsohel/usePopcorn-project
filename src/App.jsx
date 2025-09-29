@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useState } from "react";
 import StarRating from "./StarRating";
+import { useRef } from "react";
 
 // const tempMovieData = [
 //   {
@@ -261,6 +262,36 @@ function NumResult({ movies }) {
 }
 
 function Search({ query, setQuery }) {
+  const inputEl = useRef(null);
+
+  useEffect(
+    function () {
+      function callback(e) {
+        // if input element is already focused return immediately & don't clear the inputfield
+        if (document.activeElement === inputEl.current) return;
+
+        if (e.code === "Enter") {
+          inputEl.current.focus();
+          setQuery("");
+        }
+      }
+
+      // whenever enter key is pressed input will be focused
+      document.addEventListener("keydown", callback);
+
+      return () => document.removeEventListener("keydown", callback);
+    },
+    [setQuery]
+  );
+
+  /* // focus on input element on initial mount
+  useEffect(function () {
+    // ❌ manually selecting element is not a react way
+    const el = document.querySelector(".search");
+    el.focus();
+  }, []);
+  */
+
   return (
     <input
       className="search"
@@ -268,6 +299,7 @@ function Search({ query, setQuery }) {
       placeholder="Search movies..."
       value={query}
       onChange={e => setQuery(e.target.value)}
+      ref={inputEl}
     />
   );
 }
