@@ -57,10 +57,15 @@ const API_KEY = "eec81502";
 export default function App() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+
+  //   const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(function () {
+    const storedValue = localStorage.getItem("watched");
+    return JSON.parse(storedValue);
+  }); // using function
 
   //   const tempQuery = "interstellar";
 
@@ -94,6 +99,11 @@ export default function App() {
 
   function handleAddWatched(movie) {
     setWatched(curWatchedArr => [...curWatchedArr, movie]);
+
+    /* we can't simply pass 'watched' array here because it will be stale value.
+        we spread array and add new movie then convert it to string (localstorage inside the event handler)
+    */
+    // localStorage.setItem("watched", JSON.stringify([...watched, movie]));
   }
 
   function handleDeleteWatchedMovie(id) {
@@ -101,6 +111,14 @@ export default function App() {
       curWatchedArr.filter(movie => movie.imdbID !== id)
     );
   }
+
+  // storing into localstorage whenever the 'watched' updates
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
 
   useEffect(
     function () {
